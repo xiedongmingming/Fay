@@ -11,7 +11,7 @@ from gui import flask_server
 from gui.window import MainWindow
 from utils import config_util
 from scheduler.thread_manager import MyThread
-
+from core.content_db import Content_Db
 
 def __clear_samples():
     if not os.path.exists("./samples"):
@@ -35,13 +35,17 @@ if __name__ == '__main__':
     __clear_samples()
     __clear_songs()
     config_util.load_config()
-
+    dbstatus = os.path.exists("fay.db")
+    if(dbstatus == False):
+         contentdb = Content_Db()
+         contentdb.init_db()     
     ws_server = wsa_server.new_instance(port=10002)
     ws_server.start_server()
     web_ws_server = wsa_server.new_web_instance(port=10003)
     web_ws_server.start_server()
-
-    ali_nls.start()
+    #Edit by xszyou in 20230516:增加本地asr
+    if config_util.ASR_mode == "ali" and config_util.config['source']['record']:
+        ali_nls.start()
     flask_server.start()
     app = QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon('icon.png'))
