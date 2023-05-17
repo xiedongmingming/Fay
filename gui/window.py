@@ -79,6 +79,7 @@ class TDevWindow(QDialog):
         self.init_ui()
 
     def init_ui(self):
+        #
         self.mpJSWebView = QWebEngineView(self)
         self.url = 'https://www.baidu.com/'
         self.mpJSWebView.page().load(QUrl(self.url))

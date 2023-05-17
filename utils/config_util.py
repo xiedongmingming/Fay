@@ -6,7 +6,9 @@ from configparser import ConfigParser
 config: json = None
 
 system_config: ConfigParser = None
+
 system_chrome_driver = None
+
 key_ali_nls_key_id = None
 key_ali_nls_key_secret = None
 key_ali_nls_app_key = None
@@ -50,6 +52,7 @@ def load_config():
     global key_chat_module
 
     global ASR_mode
+
     global local_asr_ip
     global local_asr_port
 
@@ -81,10 +84,17 @@ def load_config():
 
 
 def save_config(config_data):
+    #
     global config
+
     config = config_data
+
     file = codecs.open('config.json', mode='w', encoding='utf-8')
+
     file.write(json.dumps(config, sort_keys=True, indent=4, separators=(',', ': ')))
+
     file.close()
+
     # for line in json.dumps(config, sort_keys=True, indent=4, separators=(',', ': ')).split("\n"):
+    #
     #     print(line)

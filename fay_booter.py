@@ -78,6 +78,7 @@ class RecorderListener(Recorder):
     def on_speaking(self, text):
         #
         if len(text) > 1:
+            #
             interact = Interact("mic", 1, {'user': '', 'msg': text})
 
             util.printInfo(3, "语音", '{}'.format(interact.data["msg"]), time.time())
@@ -140,11 +141,12 @@ class DeviceInputListener(Recorder):
         self.ngrok = None
         self.streamCache = None
         self.thread = MyThread(target=self.run)
+
         self.thread.start()  # 启动远程音频输入设备监听线程
 
     def run(self):
         #
-        # 启动ngork
+        # 启动NGORK
         #
         self.streamCache = stream_util.StreamCache(1024 * 1024 * 20)
 
@@ -188,7 +190,7 @@ class DeviceInputListener(Recorder):
 
             time.sleep(2)
 
-    # recorder会等待stream不为空才开始录音
+    # RECORDER会等待STREAM不为空才开始录音
     def get_stream(self):
 
         while self.streamCache is None:

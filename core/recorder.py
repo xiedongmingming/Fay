@@ -20,6 +20,7 @@ _RELEASE = 0.75
 class Recorder:
 
     def __init__(self, fay):
+
         self.__fay = fay
 
         self.__running = True
@@ -33,59 +34,95 @@ class Recorder:
 
         # Edit by xszyou in 20230516:增加本地asr
         self.ASRMode = cfg.ASR_mode
+
         self.__aLiNls = self.asrclient()
 
     def asrclient(self):
+
         if self.ASRMode == "ali":
             asrcli = ALiNls()
         elif self.ASRMode == "funasr":
             asrcli = FunASR()
+
         return asrcli
 
     def __get_history_average(self, number):
+
         total = 0
+
         num = 0
+
         for i in range(len(self.__history_level) - 1, -1, -1):
+
             level = self.__history_level[i]
+
             total += level
+
             num += 1
+
             if num >= number:
+                #
                 break
+
         return total / num
 
     def __get_history_percentage(self, number):
+        #
         return (self.__get_history_average(number) / self.__MAX_LEVEL) * 1.05 + 0.02
 
     def __print_level(self, level):
+
         text = ""
+
         per = level / self.__MAX_LEVEL
+
         if per > 1:
+            #
             per = 1
+
         bs = int(per * self.__MAX_BLOCK)
+
         for i in range(bs):
             text += "#"
         for i in range(self.__MAX_BLOCK - bs):
             text += "-"
+
         print(text + " [" + str(int(per * 100)) + "%]")
 
     def __waitingResult(self, iat):
+        #
         if self.__fay.playing:
+            #
             return
+
         self.processing = True
+
         t = time.time()
+
         tm = time.time()
+
         # 等待结果返回
         while not iat.done and time.time() - t < 1:
+            #
             time.sleep(0.01)
+
         text = iat.finalResults
+
         util.log(1, "语音处理完成！ 耗时: {} ms".format(math.floor((time.time() - tm) * 1000)))
+
         if len(text) > 0:
+
             self.on_speaking(text)
             self.processing = False
+
         else:
+
             util.log(1, "[!] 语音未检测到内容！")
+
             self.processing = False
+
             self.dynamic_threshold = self.__get_history_percentage(30)
+
             wsa_server.get_web_instance().add_cmd({"panelMsg": ""})
 
     def __record(self):
@@ -153,31 +190,41 @@ class Recorder:
                 if isSpeaking:
 
                     if time.time() - last_speaking_time > _RELEASE:
+                        #
                         isSpeaking = False
 
                         self.__aLiNls.end()
+
                         util.log(1, "语音处理中...")
+
                         self.__fay.last_quest_time = time.time()
+
                         self.__waitingResult(self.__aLiNls)
 
             if not soon and isSpeaking:
+                #
                 self.__aLiNls.send(data)
 
     def set_processing(self, processing):
+        #
         self.__processing = processing
 
     def start(self):
+        #
         MyThread(target=self.__record).start()
 
     def stop(self):
+        #
         self.__running = False
         self.__aLiNls.end()
 
     @abstractmethod
     def on_speaking(self, text):
+        #
         pass
 
     # TODO Edit by xszyou on 20230113:把流的获取方式封装出来方便实现麦克风录制及网络流等不同的流录制子类
     @abstractmethod
     def get_stream(self):
+        #
         pass

@@ -2,9 +2,11 @@ import json
 import time
 
 from ws4py.client.threadedclient import WebSocketClient
+
 import base64
 import hashlib
 import uuid
+
 from utils import config_util as cfg
 
 base_url = "ws://wsapi.xfyun.cn/v1/aiui"
@@ -18,6 +20,7 @@ class __WSClient(WebSocketClient):
     a_msg = ''
 
     def opened(self):
+        #
         pass
 
     def closed(self, code, reason=None):

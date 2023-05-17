@@ -19,6 +19,7 @@ class MyThread(Thread):
         if hasattr(self, '_thread_id'):
             #
             return self._thread_id
+
         for id, thread in threading._active.items():
 
             if thread is self:
@@ -42,16 +43,23 @@ __thread_list = []
 
 
 def add_thread(thread: MyThread):
+    #
     if thread not in __thread_list:
+        #
         __thread_list.append(thread)
 
 
 def remove_thread(thread: MyThread):
+    #
     if thread in __thread_list:
+        #
         __thread_list.remove(thread)
 
 
 def stopAll():
+    #
     for thread in __thread_list:
+        #
         thread.raise_exception()
+
         thread.join()
