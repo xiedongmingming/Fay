@@ -18,8 +18,9 @@ import time
 import ssl
 import websocket
 
-
 running = False
+
+
 class WS_Client:
     def __init__(self, host):
         self.__ws = None
@@ -29,18 +30,20 @@ class WS_Client:
     def on_message(self, ws, message):
         global interact_datas
         try:
-            
+
             data = json.loads(message)
-            if data["Type"] == 1:#留言
+            if data["Type"] == 1:  # 留言
                 if len(interact_datas) >= 5:
                     interact_datas.pop()
-                interact = Interact("live", 1, {"user": json.loads(data["Data"])["User"]["Nickname"], "msg": json.loads(data["Data"])["Content"]})
+                interact = Interact("live", 1, {"user": json.loads(data["Data"])["User"]["Nickname"],
+                                                "msg": json.loads(data["Data"])["Content"]})
                 interact_datas.append(interact)
-            if data["Type"] == 3:#进入
+            if data["Type"] == 3:  # 进入
                 if len(interact_datas) >= 5:
                     interact_datas.pop()
-                interact_datas.append(Interact("live", 2, {"user": json.loads(data["Data"])["User"]["Nickname"], "msg": "来了"}))
-            #...
+                interact_datas.append(
+                    Interact("live", 2, {"user": json.loads(data["Data"])["User"]["Nickname"], "msg": "来了"}))
+            # ...
         except Exception as e:
             pass
 
@@ -83,7 +86,7 @@ class Viewer:
         self.dy_msg_ws = None
 
     def __start(self):
-        MyThread(target=self.__run_dy_msg_ws).start() #获取抖音监听内容
+        MyThread(target=self.__run_dy_msg_ws).start()  # 获取抖音监听内容
         self.live_started = True
         MyThread(target=self.__get_package_listen_interact_runnable).start()
 
@@ -96,15 +99,14 @@ class Viewer:
     def is_live_started(self):
         return self.live_started
 
-    
-    #Add by xszyou on 20230412.通过抓包监测互动数据
+    # Add by xszyou on 20230412.通过抓包监测互动数据
     def __get_package_listen_interact_runnable(self):
         global interact_datas
         global running
         while running:
             if not self.live_started:
                 continue
-            
+
             for interact in interact_datas:
                 MyThread(target=self.on_interact, args=[interact, time.time()]).start()
             interact_datas.clear()
@@ -115,8 +117,7 @@ class Viewer:
         if self.dy_msg_ws:
             self.dy_msg_ws.close()
             self.dy_msg_ws = None
-            
-    
+
     @abstractmethod
     def on_interact(self, interact, event_time):
         pass

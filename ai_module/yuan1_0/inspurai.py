@@ -2,12 +2,14 @@ import os
 import uuid
 from ai_module.yuan1_0.url_config import submit_request, reply_request
 
+
 def set_yuan_account(user, phone):
     os.environ['YUAN_ACCOUNT'] = user + '||' + phone
 
 
 class Example:
     """ store some examples(input, output pairs and formats) for few-shots to prime the model."""
+
     def __init__(self, inp, out):
         self.input = inp
         self.output = out
@@ -32,26 +34,27 @@ class Example:
             "id": self.get_id(),
         }
 
+
 class Yuan:
     """The main class for a user to interface with the Inspur Yuan API.
     A user can set account info and add examples of the API request.
     """
 
-    def __init__(self, 
-                engine='base_10B',
-                temperature=0.9,
-                max_tokens=100,
-                input_prefix='',
-                input_suffix='\n',
-                output_prefix='答:',
-                output_suffix='\n\n',
-                append_output_prefix_to_query=False,
-                topK=1,
-                topP=0.9,
-                frequencyPenalty=1.2,
-                responsePenalty=1.2,
-                noRepeatNgramSize=2):
-        
+    def __init__(self,
+                 engine='base_10B',
+                 temperature=0.9,
+                 max_tokens=100,
+                 input_prefix='',
+                 input_suffix='\n',
+                 output_prefix='答:',
+                 output_suffix='\n\n',
+                 append_output_prefix_to_query=False,
+                 topK=1,
+                 topP=0.9,
+                 frequencyPenalty=1.2,
+                 responsePenalty=1.2,
+                 noRepeatNgramSize=2):
+
         self.examples = {}
         self.engine = engine
         self.temperature = temperature
@@ -121,17 +124,17 @@ class Yuan:
         return self.input_prefix + ex.get_input(
         ) + self.input_suffix + self.output_prefix + ex.get_output(
         ) + self.output_suffix
-    
-    def response(self, 
-                query,
-                engine='base_10B',
-                max_tokens=20,
-                temperature=0.9,
-                topP=0.1,
-                topK=1,
-                frequencyPenalty=1.0,
-                responsePenalty=1.0,
-                noRepeatNgramSize=0):
+
+    def response(self,
+                 query,
+                 engine='base_10B',
+                 max_tokens=20,
+                 temperature=0.9,
+                 topP=0.1,
+                 topK=1,
+                 frequencyPenalty=1.0,
+                 responsePenalty=1.0,
+                 noRepeatNgramSize=0):
         """Obtains the original result returned by the API."""
 
         try:
@@ -141,9 +144,8 @@ class Yuan:
             response_text = reply_request(requestId)
         except Exception as e:
             raise e
-        
-        return response_text
 
+        return response_text
 
     def del_special_chars(self, msg):
         special_chars = ['<unk>', '<eod>', '#', '▃', '▁', '▂', '　']
@@ -151,20 +153,19 @@ class Yuan:
             msg = msg.replace(char, '')
         return msg
 
-
     def submit_API(self, prompt, trun=[]):
         """Submit prompt to yuan API interface and obtain an pure text reply.
         :prompt: Question or any content a user may input.
         :return: pure text response."""
         query = self.craft_query(prompt)
-        res = self.response(query,engine=self.engine,
+        res = self.response(query, engine=self.engine,
                             max_tokens=self.max_tokens,
                             temperature=self.temperature,
                             topP=self.topP,
                             topK=self.topK,
-                            frequencyPenalty = self.frequencyPenalty,
-                            responsePenalty = self.responsePenalty,
-                            noRepeatNgramSize = self.noRepeatNgramSize)
+                            frequencyPenalty=self.frequencyPenalty,
+                            responsePenalty=self.responsePenalty,
+                            noRepeatNgramSize=self.noRepeatNgramSize)
         if 'resData' in res and res['resData'] != None:
             txt = res['resData']
         else:
@@ -181,14 +182,12 @@ class Yuan:
         if isinstance(trun, str):
             trun = [trun]
         try:
-            if trun != None and isinstance(trun, list) and  trun != []:
+            if trun != None and isinstance(trun, list) and trun != []:
                 for tr in trun:
-                    if tr in txt and tr!="":
+                    if tr in txt and tr != "":
                         txt = txt[:txt.index(tr)]
                     else:
                         continue
         except:
             return txt
         return txt
-
-

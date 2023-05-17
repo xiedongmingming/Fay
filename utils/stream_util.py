@@ -1,23 +1,32 @@
 from io import BytesIO
+
 import threading
 import functools
 
+
 def synchronized(func):
-  @functools.wraps(func)
-  def wrapper(self, *args, **kwargs):
-    with self.lock:
-      return func(self, *args, **kwargs)
-  return wrapper
+    #
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        #
+        with self.lock:
+            #
+            return func(self, *args, **kwargs)
+
+    return wrapper
+
 
 class StreamCache:
+
     def __init__(self, maxbytes):
+
         self.lock = threading.Lock()
         self.bytesio = BytesIO()
         self.writeSeek = 0
         self.readSeek = 0
         self.maxbytes = maxbytes
         self.idle = 0
-        
+
     @synchronized
     def write(self, bs):
         # print("写:{},{}".format(len(bs),bs), end=' ')
@@ -35,9 +44,8 @@ class StreamCache:
         if self.writeSeek >= self.maxbytes - 1:
             self.writeSeek = 0
 
-    
     @synchronized
-    def read(self, length, exception_on_overflow = False):
+    def read(self, length, exception_on_overflow=False):
         if self.idle < length:
             return None
         # print("读:{}".format(length), end=' ')
@@ -52,7 +60,7 @@ class StreamCache:
         self.idle -= length
         self.readSeek = self.bytesio.tell()
         if self.readSeek >= self.maxbytes - 1:
-           self.readSeek = 0
+            self.readSeek = 0
         return bs
 
     @synchronized
@@ -61,6 +69,7 @@ class StreamCache:
         self.writeSeek = 0
         self.readSeek = 0
         self.idle = 0
+
 
 if __name__ == '__main__':
     streamCache = StreamCache(5)
@@ -72,13 +81,3 @@ if __name__ == '__main__':
     print(streamCache.read(2))
     print(streamCache.read(2))
     print(streamCache.read(3))
-
-
-    
-
-
-    
-
-
-
-        

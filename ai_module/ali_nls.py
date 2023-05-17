@@ -35,12 +35,16 @@ def __post_token():
 
 
 def __runnable():
+    #
     while __running:
+        #
         __post_token()
+
         time.sleep(60 * 60 * 12)
 
 
 def start():
+    #
     MyThread(target=__runnable).start()
 
 
@@ -124,7 +128,7 @@ class ALiNls:
                             ws.send(json.dumps(frame))
                         elif type(frame) == bytes:
                             ws.send(frame, websocket.ABNF.OPCODE_BINARY)
-                        #print('发送 ------> ' + str(type(frame)))
+                        # print('发送 ------> ' + str(type(frame)))
                 except Exception as e:
                     print(e)
                 time.sleep(0.04)

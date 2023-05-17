@@ -3,6 +3,7 @@ import time
 import azure.cognitiveservices.speech as speechsdk
 import asyncio
 import sys
+
 sys.path.append("E:\\GitHub\\Fay\\")
 from core import tts_voice
 from core.tts_voice import EnumVoice
@@ -12,8 +13,6 @@ import pygame
 import edge_tts
 
 
-
-
 class Speech:
     def __init__(self):
         self.ms_tts = False
@@ -21,12 +20,12 @@ class Speech:
             self.__speech_config = speechsdk.SpeechConfig(subscription=cfg.key_ms_tts_key, region=cfg.key_ms_tts_region)
             self.__speech_config.speech_recognition_language = "zh-CN"
             self.__speech_config.speech_synthesis_voice_name = "zh-CN-XiaoxiaoNeural"
-            self.__speech_config.set_speech_synthesis_output_format(speechsdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3)
+            self.__speech_config.set_speech_synthesis_output_format(
+                speechsdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3)
             self.__synthesizer = speechsdk.SpeechSynthesizer(speech_config=self.__speech_config, audio_config=None)
             self.ms_tts = True
         self.__connection = None
         self.__history_data = []
-
 
     def __get_history(self, voice_name, style, text):
         for data in self.__history_data:
@@ -44,8 +43,8 @@ class Speech:
         if self.__connection is not None:
             self.__connection.close()
 
-    #生成mp3音频
-    async def get_edge_tts(self,text,voice,file_url) -> None:
+    # 生成mp3音频
+    async def get_edge_tts(self, text, voice, file_url) -> None:
         communicate = edge_tts.Communicate(text, voice)
         await communicate.save(file_url)
 
@@ -101,9 +100,9 @@ class Speech:
                    '</speak>'.format(voice_name, style, 1.8, text)
             try:
                 file_url = './samples/sample-' + str(int(time.time() * 1000)) + '.mp3'
-                asyncio.new_event_loop().run_until_complete(self.get_edge_tts(text,voice_name,file_url))
+                asyncio.new_event_loop().run_until_complete(self.get_edge_tts(text, voice_name, file_url))
                 self.__history_data.append((voice_name, style, text, file_url))
-            except Exception as e :
+            except Exception as e:
                 util.log(1, "[x] 语音转换失败！")
                 util.log(1, "[x] 原因: " + str(str(e)))
                 file_url = None
@@ -119,4 +118,3 @@ if __name__ == '__main__':
 
     print(s)
     sp.close()
-

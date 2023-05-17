@@ -11,6 +11,7 @@ import _thread as thread
 from core import wsa_server, song_player
 from utils import config_util as cfg
 
+
 class FunASR:
     # 初始化
     def __init__(self):
@@ -23,7 +24,6 @@ class FunASR:
         self.__task_id = ''
         self.done = False
         self.finalResults = ""
-
 
     def __on_msg(self):
         if "暂停" in self.finalResults or "不想听了" in self.finalResults or "别唱了" in self.finalResults:
@@ -82,7 +82,8 @@ class FunASR:
         self.done = False
         self.__frames.clear()
         websocket.enableTrace(False)
-        self.__ws = websocket.WebSocketApp(self.__URL, on_message=self.on_message,on_close=self.on_close,on_error=self.on_error,subprotocols=["binary"])
+        self.__ws = websocket.WebSocketApp(self.__URL, on_message=self.on_message, on_close=self.on_close,
+                                           on_error=self.on_error, subprotocols=["binary"])
         self.__ws.on_open = self.on_open
 
         self.__ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
@@ -96,8 +97,8 @@ class FunASR:
     def start(self):
         Thread(target=self.__connect, args=[]).start()
         data = {
-                'vad_need':False,
-                'state':'StartTranscription'
+            'vad_need': False,
+            'state': 'StartTranscription'
         }
         self.add_frame(data)
 
@@ -112,7 +113,7 @@ class FunASR:
                         self.__ws.send(frame, websocket.ABNF.OPCODE_BINARY)
                     time.sleep(0.4)
                 self.__frames.clear()
-                frame = {'vad_need':False,'state':'StopTranscription'}
+                frame = {'vad_need': False, 'state': 'StopTranscription'}
                 self.__ws.send(json.dumps(frame))
             except Exception as e:
                 print(e)

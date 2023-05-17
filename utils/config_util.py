@@ -3,8 +3,8 @@ import json
 import codecs
 from configparser import ConfigParser
 
-
 config: json = None
+
 system_config: ConfigParser = None
 system_chrome_driver = None
 key_ali_nls_key_id = None
@@ -23,12 +23,17 @@ key_chatgpt_api_key = None
 key_chat_module = None
 
 ASR_mode = None
-local_asr_ip = None 
-local_asr_port = None 
+
+local_asr_ip = None
+local_asr_port = None
+
 
 def load_config():
+    #
     global config
+
     global system_config
+
     global key_ali_nls_key_id
     global key_ali_nls_key_secret
     global key_ali_nls_app_key
@@ -45,16 +50,18 @@ def load_config():
     global key_chat_module
 
     global ASR_mode
-    global local_asr_ip 
+    global local_asr_ip
     global local_asr_port
 
     system_config = ConfigParser()
+
     system_config.read('system.conf', encoding='UTF-8')
+
     key_ali_nls_key_id = system_config.get('key', 'ali_nls_key_id')
     key_ali_nls_key_secret = system_config.get('key', 'ali_nls_key_secret')
     key_ali_nls_app_key = system_config.get('key', 'ali_nls_app_key')
     key_ms_tts_key = system_config.get('key', 'ms_tts_key')
-    key_ms_tts_region  = system_config.get('key', 'ms_tts_region')
+    key_ms_tts_region = system_config.get('key', 'ms_tts_region')
     key_xf_aiui_app_id = system_config.get('key', 'xf_aiui_app_id')
     key_xf_aiui_api_key = system_config.get('key', 'xf_aiui_api_key')
     key_xf_ltp_app_id = system_config.get('key', 'xf_ltp_app_id')
@@ -66,6 +73,7 @@ def load_config():
     key_chat_module = system_config.get('key', 'chat_module')
 
     ASR_mode = system_config.get('key', 'ASR_mode')
+
     local_asr_ip = system_config.get('key', 'local_asr_ip')
     local_asr_port = system_config.get('key', 'local_asr_port')
 

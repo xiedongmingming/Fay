@@ -93,7 +93,8 @@ def question(text):
         paramBase64 = base64.b64encode(param).decode()
         checkSumPre = cfg.key_xf_aiui_api_key + str(curTime) + paramBase64
         checksum = hashlib.md5(checkSumPre.encode("utf-8")).hexdigest()
-        connParam = "?appid=" + cfg.key_xf_aiui_app_id + "&checksum=" + checksum + "&param=" + paramBase64 + "&curtime=" + str(curTime) + "&signtype=md5"
+        connParam = "?appid=" + cfg.key_xf_aiui_app_id + "&checksum=" + checksum + "&param=" + paramBase64 + "&curtime=" + str(
+            curTime) + "&signtype=md5"
 
         ws = __WSClient(base_url + connParam, protocols=['chat'], headers=[("Origin", "https://wsapi.xfyun.cn")])
         ws.q_msg = text

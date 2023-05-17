@@ -13,10 +13,13 @@ from scheduler.thread_manager import MyThread
 
 
 class MainWindow(QMainWindow):
+    #
     SigSendMessageToJS = pyqtSignal(str)
 
     def __init__(self):
+        #
         super(MainWindow, self).__init__()
+
         # self.setWindowFlags(Qt.WindowType.WindowShadeButtonHint)
         self.setWindowTitle('FeiFei Alpha')
         # self.setFixedSize(16 * 80, 9 * 80) 
@@ -26,10 +29,13 @@ class MainWindow(QMainWindow):
         self.browser = QWebEngineView()
         self.browser.load(QUrl('http://127.0.0.1:5000'))
         self.setCentralWidget(self.browser)
+
         MyThread(target=self.runnable).start()
 
     def runnable(self):
+        #
         while True:
+
             if not self.isVisible():
                 # try:
                 #     wsa_server.get_instance().stop_server()
@@ -38,28 +44,38 @@ class MainWindow(QMainWindow):
                 # except BaseException as e:
                 #     print(e)
                 os.system("taskkill /F /PID {}".format(os.getpid()))
+
             time.sleep(0.05)
 
     def center(self):
+
         screen = QtWidgets.QDesktopWidget().screenGeometry()
+
         size = self.geometry()
+
         self.move((screen.width() - size.width()) / 2, (screen.height() - size.height()) / 2)
 
     def keyPressEvent(self, event):
+
         pass
+
         # if event.key() == Qt.Key_F12:
         #     self.s = TDevWindow()
         #     self.s.show()
         #     self.browser.page().setDevToolsPage(self.s.mpJSWebView.page())
 
     def OnReceiveMessageFromJS(self, strParameter):
+
         if not strParameter:
             return
 
 
 class TDevWindow(QDialog):
+
     def __init__(self):
+        #
         super(TDevWindow, self).__init__()
+
         self.init_ui()
 
     def init_ui(self):
