@@ -63,7 +63,7 @@ class ViewerListener(Viewer):
         pass
 
 
-# 录制麦克风音频输入并传给aliyun
+# 录制麦克风音频输入并传给ALIYUN
 class RecorderListener(Recorder):
 
     def __init__(self, device, fei):
@@ -71,7 +71,7 @@ class RecorderListener(Recorder):
         self.__device = device
         self.__RATE = 16000
         self.__FORMAT = pyaudio.paInt16
-        self.__CHANNELS = 1
+        self.__CHANNELS = 2
 
         super().__init__(fei)
 
