@@ -58,8 +58,8 @@ def start():
 
 
 class ALiNls:
-    # 初始化
-    def __init__(self):
+
+    def __init__(self):  # 初始化
 
         self.__URL = 'wss://nls-gateway-cn-shenzhen.aliyuncs.com/ws/v1'
         self.__ws = None
@@ -89,9 +89,10 @@ class ALiNls:
     def __on_msg(self):
 
         if "暂停" in self.finalResults or "不想听了" in self.finalResults or "别唱了" in self.finalResults:
+            #
             song_player.stop()
 
-    # 收到websocket消息的处理
+    # 收到WEBSOCKET消息的处理
     def on_message(self, ws, message):
 
         try:
@@ -133,19 +134,19 @@ class ALiNls:
             except Exception as e:
                 print(e)
 
-    # 收到websocket错误的处理
+    # 收到WEBSOCKET错误的处理
     def on_close(self, ws, code, msg):
 
         self.__connected = False
 
         print("### CLOSE:", msg)
 
-    # 收到websocket错误的处理
+    # 收到WEBSOCKET错误的处理
     def on_error(self, ws, error):
 
         print("### error:", error)
 
-    # 收到websocket连接建立的处理
+    # 收到WEBSOCKET连接建立的处理
     def on_open(self, ws):
 
         self.__connected = True
