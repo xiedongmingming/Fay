@@ -28,6 +28,61 @@ from utils import config_util as cfg
 from core.content_db import Content_Db
 from datetime import datetime
 from ai_module import nlp_rasa
+from ai_module import nlp_gpt
+from ai_module import yolov8
+from ai_module import nlp_VisualGLM as VisualGLM
+
+#文本消息处理
+def send_for_answer(msg,sendto):
+        contentdb = Content_Db()
+        contentdb.add_content('member','send', msg)       
+        text = ''
+        textlist = []
+        try:
+            #wsa_server.get_web_instance().add_cmd({"panelMsg": "思考中..."})
+            util.log(1, '自然语言处理...')
+            tm = time.time()
+            cfg.load_config()
+            if sendto == 2:
+                text = nlp_gpt.question(msg)
+            else:
+                if cfg.key_chat_module == 'xfaiui':
+                    text = xf_aiui.question(msg)
+                elif cfg.key_chat_module == 'yuan':
+                    text = yuan_1_0.question(msg)
+                elif cfg.key_chat_module == 'chatgpt':
+                    text = chatgpt.question(msg)
+                elif cfg.key_chat_module == 'rasa':
+                    textlist = nlp_rasa.question(msg)
+                    text = textlist[0]['text']    
+                elif cfg.key_chat_module == "VisualGLM":
+                    text = VisualGLM.question(msg)
+
+                else:
+                    raise RuntimeError('讯飞key、yuan key、chatgpt key都没有配置！')    
+                util.log(1, '自然语言处理完成. 耗时: {} ms'.format(math.floor((time.time() - tm) * 1000)))
+                if text == '哎呀，你这么说我也不懂，详细点呗' or text == '':
+                    util.log(1, '[!] 自然语言无语了！')
+                    text = '哎呀，你这么说我也不懂，详细点呗'
+                    # wsa_server.get_web_instance().add_cmd({"panelMsg": ""})
+                    
+        except BaseException as e:
+            print(e)
+            util.log(1, '自然语言处理错误！')
+            text = '哎呀，你这么说我也不懂，详细点呗'
+            # wsa_server.get_web_instance().add_cmd({"panelMsg": ""})
+                
+        now = datetime.now()
+        timetext = str(now.strftime("%Y-%m-%d %H:%M:%S"))
+        contentdb.add_content('fay','send',text)
+        wsa_server.get_web_instance().add_cmd({"panelReply": {"type":"fay","content":text}})
+        if len(textlist) > 1:
+            i = 1
+            while i < len(textlist):
+                  contentdb.add_content('fay','send',textlist[i]['text'])
+                  wsa_server.get_web_instance().add_cmd({"panelReply": {"type":"fay","content":textlist[i]['text']}})
+                  i+= 1
+        return text
 class FeiFei:
     def __init__(self):
         pygame.mixer.init()
@@ -237,12 +292,22 @@ class FeiFei:
                     # self.__isExecute = True #!!!!
 
                     if index == 1:
+                        fay_eyes = yolov8.new_instance()            
+                        if fay_eyes.get_status():#YOLO正在运行
+                            person_count, stand_count, sit_count = fay_eyes.get_counts()
+                            if person_count != 1: #不是有且只有一个人，不互动
+                                 wsa_server.get_web_instance().add_cmd({"panelMsg": "不是有且只有一个人，不互动"})
+                                 continue
+
+                        answer = self.__get_answer(interact.interleaver, self.q_msg)
+                        if(self.muting): #静音指令正在执行
+                            wsa_server.get_web_instance().add_cmd({"panelMsg": "静音指令正在执行，不互动"})
+                            continue
+                        
                         contentdb = Content_Db()    
                         contentdb.add_content('member','speak',self.q_msg)
                         wsa_server.get_web_instance().add_cmd({"panelReply": {"type":"member","content":self.q_msg}})
-                        answer = self.__get_answer(interact.interleaver, self.q_msg)
-                        if self.muting:
-                            continue
+
                         text = ''
                         textlist = []
                         if answer is None:
@@ -260,6 +325,9 @@ class FeiFei:
                                 elif cfg.key_chat_module == 'rasa':
                                     textlist = nlp_rasa.question(self.q_msg)
                                     text = textlist[0]['text']
+                                elif cfg.key_chat_module == "VisualGLM":
+                                    text = VisualGLM.question(self.q_msg)
+
                                 else:
                                     raise RuntimeError('讯飞key、yuan key、chatgpt key都没有配置！')    
                                 util.log(1, '自然语言处理完成. 耗时: {} ms'.format(math.floor((time.time() - tm) * 1000)))
@@ -516,27 +584,27 @@ class FeiFei:
             audio_length = eyed3.load(file_url).info.time_secs #mp3音频长度
             # with wave.open(file_url, 'rb') as wav_file: #wav音频长度
             #     audio_length = wav_file.getnframes() / float(wav_file.getframerate())
-            if audio_length <= config_util.config["interact"]["maxInteractTime"] or say_type == "script":
-                if config_util.config["interact"]["playSound"]: # 展板播放
-                    self.__play_sound(file_url)
-                else:#发送音频给ue和socket
-                    content = {'Topic': 'Unreal', 'Data': {'Key': 'audio', 'Value': os.path.abspath(file_url), 'Time': audio_length, 'Type': say_type}}
-                    wsa_server.get_instance().add_cmd(content)
-                    if self.deviceConnect is not None:
-                        try:
-                            self.deviceConnect.send(b'\x00\x01\x02\x03\x04\x05\x06\x07\x08') # 发送音频开始标志，同时也检查设备是否在线
-                            wavfile = open(os.path.abspath(file_url),'rb')
+            # if audio_length <= config_util.config["interact"]["maxInteractTime"] or say_type == "script":
+            if config_util.config["interact"]["playSound"]: # 展板播放
+                self.__play_sound(file_url)
+            else:#发送音频给ue和socket
+                content = {'Topic': 'Unreal', 'Data': {'Key': 'audio', 'Value': os.path.abspath(file_url), 'Time': audio_length, 'Type': say_type}}
+                wsa_server.get_instance().add_cmd(content)
+                if self.deviceConnect is not None:
+                    try:
+                        self.deviceConnect.send(b'\x00\x01\x02\x03\x04\x05\x06\x07\x08') # 发送音频开始标志，同时也检查设备是否在线
+                        wavfile = open(os.path.abspath(file_url),'rb')
+                        data = wavfile.read(1024)
+                        total = 0
+                        while data:
+                            total += len(data)
+                            self.deviceConnect.send(data)
                             data = wavfile.read(1024)
-                            total = 0
-                            while data:
-                                total += len(data)
-                                self.deviceConnect.send(data)
-                                data = wavfile.read(1024)
-                                time.sleep(0.001)
-                            self.deviceConnect.send(b'\x08\x07\x06\x05\x04\x03\x02\x01\x00')# 发送音频结束标志
-                            util.log(1, "远程音频发送完成：{}".format(total))
-                        except socket.error as serr:
-                            util.log(1,"远程音频输入输出设备已经断开：{}".format(serr))
+                            time.sleep(0.001)
+                        self.deviceConnect.send(b'\x08\x07\x06\x05\x04\x03\x02\x01\x00')# 发送音频结束标志
+                        util.log(1, "远程音频发送完成：{}".format(total))
+                    except socket.error as serr:
+                        util.log(1,"远程音频输入输出设备已经断开：{}".format(serr))
 
 
                     
@@ -590,57 +658,7 @@ class FeiFei:
             self.last_interact_time = time.time()
             self.speaking = False
 
-    def send_for_answer(self,msg):
-        contentdb = Content_Db()
-        contentdb.add_content('member','send',msg)
-        answer = self.__get_answer('send', msg)
-        
-        text = ''
-        textlist = []
-        if answer is None:
-            try:
-                #wsa_server.get_web_instance().add_cmd({"panelMsg": "思考中..."})
-                util.log(1, '自然语言处理...')
-                tm = time.time()
-                cfg.load_config()
-                if cfg.key_chat_module == 'xfaiui':
-                    text = xf_aiui.question(msg)
-                elif cfg.key_chat_module == 'yuan':
-                    text = yuan_1_0.question(msg)
-                elif cfg.key_chat_module == 'chatgpt':
-                    text = chatgpt.question(msg)
-                elif cfg.key_chat_module == 'rasa':
-                    textlist = nlp_rasa.question(msg)
-                    text = textlist[0]['text']    
-                   
-
-                else:
-                    raise RuntimeError('讯飞key、yuan key、chatgpt key都没有配置！')    
-                util.log(1, '自然语言处理完成. 耗时: {} ms'.format(math.floor((time.time() - tm) * 1000)))
-                if text == '哎呀，你这么说我也不懂，详细点呗' or text == '':
-                    util.log(1, '[!] 自然语言无语了！')
-                    text = '哎呀，你这么说我也不懂，详细点呗'
-                    # wsa_server.get_web_instance().add_cmd({"panelMsg": ""})
-                    
-            except BaseException as e:
-                print(e)
-                util.log(1, '自然语言处理错误！')
-                text = '哎呀，你这么说我也不懂，详细点呗'
-                # wsa_server.get_web_instance().add_cmd({"panelMsg": ""})
-                
-        elif answer != 'NO_ANSWER':
-            text = answer
-        now = datetime.now()
-        timetext = str(now.strftime("%Y-%m-%d %H:%M:%S"))
-        contentdb.add_content('fay','send',text)
-        wsa_server.get_web_instance().add_cmd({"panelReply": {"type":"fay","content":text}})
-        if len(textlist) > 1:
-            i = 1
-            while i < len(textlist):
-                  contentdb.add_content('fay','send',textlist[i]['text'])
-                  wsa_server.get_web_instance().add_cmd({"panelReply": {"type":"fay","content":textlist[i]['text']}})
-                  i+= 1
-        return text
+    
 
 
 
